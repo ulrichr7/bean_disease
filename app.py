@@ -4,7 +4,7 @@ from PIL import Image
 import io
 import time
 
-API_URL = "http://localhost:8001"
+st.secrets["API_URL"]
 
 st.set_page_config(page_title="Production ML Pipeline Dashboard", layout="wide")
 

@@ -1,34 +1,129 @@
-# ==========================
-# Machine Learning
-# ==========================
-tensorflow-cpu>=2.16.1
-numpy==1.26.4
-scikit-learn==1.5.1
-pandas==2.2.2
-matplotlib==3.9.0
-opencv-python==4.10.0.84
-Pillow==10.4.0
-
-# ==========================
-# API
-# ==========================
+absl-py==2.5.0
+altair==5.5.0
+annotated-doc==0.0.4
+annotated-types==0.8.0
+anyio==4.14.2
+astunparse==1.6.3
+attrs==26.1.0
+bidict==0.23.1
+blinker==1.9.0
+brotli==1.2.0
+cachetools==5.5.2
+certifi==2026.7.22
+cffi==2.1.0
+charset-normalizer==3.4.9
+click==8.4.2
+colorama==0.4.6
+ConfigArgParse==1.7.5
+contourpy==1.3.3
+cycler==0.12.1
+dnspython==2.8.0
+email-validator==2.3.0
 fastapi==0.111.0
-uvicorn[standard]==0.30.1
-python-multipart==0.0.9
-
-# ==========================
-# Dashboard
-# ==========================
-streamlit==1.37.0
-
-# ==========================
-# Load Testing
-# ==========================
+fastapi-cli==0.0.32
+Flask==3.1.3
+flask-cors==6.0.5
+Flask-Login==0.6.3
+flatbuffers==25.12.19
+fonttools==4.63.0
+gast==0.7.0
+gevent==26.7.0
+geventhttpclient==2.3.9
+gitdb==4.0.12
+GitPython==3.1.56
+google-pasta==0.2.0
+greenlet==3.5.4
+grpcio==1.83.0
+h11==0.16.0
+h5py==3.14.0
+httpcore==1.0.9
+httptools==0.8.0
+httpx==0.28.1
+idna==3.18
+iniconfig==2.3.0
+itsdangerous==2.2.0
+Jinja2==3.1.6
+joblib==1.5.3
+jsonschema==4.26.0
+jsonschema-specifications==2025.9.1
+keras==3.15.0
+kiwisolver==1.5.0
+libclang==18.1.1
 locust==2.31.3
-
-# ==========================
-# Utilities
-# ==========================
+Markdown==3.10.2
+markdown-it-py==4.2.0
+MarkupSafe==3.0.3
+matplotlib==3.9.0
+mdurl==0.1.2
+ml_dtypes==0.5.4
+msgpack==1.2.1
+namex==0.1.0
+narwhals==2.24.0
+ngrok==1.7.0
+numpy==1.26.4
+opencv-python==4.10.0.84
+opt_einsum==3.4.0
+optree==0.19.1
+orjson==3.11.9
+packaging==24.2
+pandas==2.2.2
+pillow==10.4.0
+pluggy==1.6.0
+protobuf==5.29.6
+psutil==7.2.2
+pyarrow==24.0.0
+pycparser==3.0
+pydantic==2.13.4
+pydantic_core==2.46.4
+pydeck==0.9.3
+Pygments==2.20.0
+pyparsing==3.3.2
+pytest==9.1.1
+python-dateutil==2.9.0.post0
+python-dotenv==1.2.2
+python-engineio==4.13.3
+python-multipart==0.0.9
+python-socketio==5.16.3
+pytz==2026.3.post1
+PyYAML==6.0.3
+pyzmq==27.1.0
+referencing==0.37.0
 requests==2.32.3
+rich==13.9.4
+rich-toolkit==0.20.3
+rpds-py==2026.6.3
+scikit-learn==1.5.1
+scipy==1.17.1
+setuptools==83.0.0
+shellingham==1.5.4
+simple-websocket==1.1.0
+six==1.17.0
+smmap==5.0.3
+starlette==0.37.2
+streamlit==1.37.0
+tenacity==8.5.0
+tensorboard==2.20.0
+tensorboard-data-server==0.7.2
+tensorflow-cpu==2.20.0
+termcolor==3.3.0
+threadpoolctl==3.6.0
+toml==0.10.2
+tornado==6.5.7
 tqdm==4.66.4
-prometheus-client==0.16.0
+typer==0.27.0
+typing-inspection==0.4.2
+typing_extensions==4.16.0
+tzdata==2026.3
+ujson==5.13.0
+urllib3==2.7.0
+uvicorn==0.30.1
+watchdog==4.0.2
+watchfiles==1.2.0
+websocket-client==1.9.0
+websockets==16.1.1
+Werkzeug==3.1.8
+wheel==0.47.0
+wrapt==2.2.2
+wsproto==1.3.2
+zope.event==6.2
+zope.interface==8.5

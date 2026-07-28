@@ -30,7 +30,7 @@ if app_mode == "Single Prediction":
     
     if uploaded_file is not None:
         image = Image.open(uploaded_file)
-        st.image(image, caption="Uploaded Leaf Image Target", use_container_width=True)
+        st.image(image, caption="Uploaded Leaf Image Target", use_column_width=True)
         
         if st.button("🤖 Analyze Leaf"):
             with st.spinner("Executing model matrix calculations..."):

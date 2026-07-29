@@ -58,14 +58,21 @@ Add your YouTube video link here:
 ## Deployment URL
 If deployed to a cloud platform, add the live URL here:
 
-- Live URL: https://your-deployment-url
+Backend API (Render):
+[https://bean-disease1.onrender.com/](https://bean-disease1.onrender.com)
+
+Swagger Documentation:
+[https://bean-disease1.onrender.com/docs](https://bean-disease-streamlit-y9mi.onrender.com)
+
+Frontend (Streamlit):
+[https://YOUR-STREAMLIT-URL.onrender.com/](https://beandisease-ui.onrender.com)
 
 ## Setup Instructions
 
 ### 1. Clone the Repository
 ```bash
-git clone <your-repo-url>
-cd bean-disease-ml-pipeline
+git clone https://github.com/ulrichr7/bean_disease.git
+cd bean-disease
 ```
 
 ### 2. Create a Virtual Environment
@@ -81,7 +88,7 @@ pip install -r requirements.txt
 
 ### 4. Run the API
 ```bash
-uvicorn api.main:app --host 0.0.0.0 --port 8001
+uvicorn api.main:app --host 0.0.0.0 --port 8000
 ```
 
 ### 5. Run the Dashboard
@@ -95,7 +102,7 @@ docker-compose up --build
 ```
 
 The API will be available at:
-- http://localhost:8001
+- http://localhost:8000
 
 The Streamlit dashboard will be available at:
 - http://localhost:8501
@@ -129,11 +136,18 @@ locust -f locustfile.py --host http://localhost:8001
 
 Then open the Locust UI in your browser and start a test.
 
-## Sample Load Test Results
-You can add your recorded results here, for example:
-- 100 users: average response time = X ms
-- 200 users: average response time = X ms
-- 500 users: average response time = X ms
+## Sample Load Test Results:
+
+10 users
+Average Response Time: 83 ms
+
+50 users
+Average Response Time: 112 ms
+
+100 users
+Average Response Time: 171 ms
+
+Failure Rate: 0%
 
 ## Notes
 - The project uses TensorFlow/Keras for image classification.
@@ -188,6 +202,35 @@ Run Locust headless to produce reproducible CSV outputs. Use the included PowerS
 ```
 
 This will produce CSV files named like `locust-results-<timestamp>_stats.csv` which you can inspect for average/median response times and failures.
+
+## Model Evaluation
+
+The CNN model was evaluated using the test dataset.
+
+Evaluation Metrics:
+
+- Accuracy: 94.37%
+- Precision: 94.33%
+- Recall: 94.37%
+- F1-Score: 94.34%
+
+The notebook includes the confusion matrix, classification report, and training history.
+
+## Technologies Used
+
+- Python 3.11
+- TensorFlow / Keras
+- FastAPI
+- Streamlit
+- Docker
+- Render
+- Prometheus
+- Grafana
+- Locust
+- OpenCV
+- NumPy
+- Pandas
+
 
 ## Notes and recommendations
 - Currently uploads are saved to disk under `data/train/<label>/`. If you require saving uploads to a database for auditability, add a simple record-keeping DB (SQLite/Postgres) and update `/upload-bulk` to write metadata to the DB.

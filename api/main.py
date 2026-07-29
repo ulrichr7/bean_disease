@@ -3,14 +3,22 @@ import io
 import zipfile
 import numpy as np
 from PIL import Image
-from fastapi import FastAPI, File, UploadFile, HTTPException
+from fastapi import FastAPI, File, UploadFile, HTTPException, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
-import tensorflow as tf
 from prometheus_client import Counter, Histogram, generate_latest, CONTENT_TYPE_LATEST
-from fastapi.responses import Response
+from fastapi.responses import Response, JSONResponse
+import uuid
 import time
 from datetime import datetime
 from . import db
+
+try:
+    import tensorflow as tf
+except Exception as exc:
+    tf = None
+    TENSORFLOW_IMPORT_ERROR = exc
+else:
+    TENSORFLOW_IMPORT_ERROR = None
 
 app = FastAPI(title="Production Bean ML Pipeline API")
 
@@ -35,7 +43,10 @@ for label in CLASS_NAMES:
     os.makedirs(os.path.join(UPLOAD_DIR, label), exist_ok=True)
 
 # Load global inference engine model
-if os.path.exists(MODEL_PATH):
+if tf is None:
+    model = None
+    print(f"⚠️ TensorFlow unavailable at startup: {TENSORFLOW_IMPORT_ERROR}")
+elif os.path.exists(MODEL_PATH):
     model = tf.keras.models.load_model(MODEL_PATH)
     print("🚀 Base model loaded successfully.")
 else:
@@ -55,6 +66,9 @@ REQUEST_COUNT = Counter(
 REQUEST_LATENCY = Histogram(
     'bean_api_request_latency_seconds', 'Latency of requests to the Bean API', ['endpoint']
 )
+
+# In-memory task tracker for long-running background jobs
+TASKS = {}
 
 
 @app.middleware("http")
@@ -92,6 +106,8 @@ def read_root():
 @app.post("/predict")
 async def predict(file: UploadFile = File(...)):
     if model is None:
+        if tf is None:
+            raise HTTPException(status_code=500, detail=f"Inference engine unavailable: {TENSORFLOW_IMPORT_ERROR}")
         raise HTTPException(status_code=500, detail="Inference engine uninitialized.")
     if not file.content_type.startswith("image/"):
         raise HTTPException(status_code=400, detail="Invalid image file.")
@@ -151,17 +167,30 @@ async def upload_bulk(file: UploadFile = File(...)):
         raise HTTPException(status_code=500, detail=f"Bulk filesystem write failed: {str(e)}")
 
 @app.post("/retrain")
-async def retrain_model():
-    """Rubric Req: 1. Uses old model as pre-trained model, 2. Run preprocessing, 3. Retrain."""
-    global model
+async def retrain_model(background_tasks: BackgroundTasks):
+    """Schedule retraining as a background job to avoid blocking the API."""
+    global model, MODEL_PATH
+    if tf is None:
+        raise HTTPException(status_code=500, detail=f"Retraining unavailable: {TENSORFLOW_IMPORT_ERROR}")
     if not os.path.exists(MODEL_PATH):
         raise HTTPException(status_code=400, detail="Base model weights file not found to use as pre-trained baseline.")
-    
+
+    task_id = str(uuid.uuid4())
+    TASKS[task_id] = {"status": "scheduled", "created_at": datetime.utcnow().isoformat(), "message": None}
+    background_tasks.add_task(_retrain_background, task_id)
+    return JSONResponse(status_code=202, content={"status": "scheduled", "task_id": task_id, "message": "Retraining started in background."})
+
+
+def _retrain_background(task_id: str):
+    """Background worker that performs the retraining and updates TASKS."""
+    global model, MODEL_PATH
+    TASKS[task_id]["status"] = "running"
+    TASKS[task_id]["started_at"] = datetime.utcnow().isoformat()
     try:
-        # 1. Rubric Step: Load the old model as a pre-trained baseline
+        # Load pre-trained baseline
         local_model = tf.keras.models.load_model(MODEL_PATH)
-        
-        # 2. Rubric Step: Preprocess the newly uploaded directory data points
+
+        # Preprocess uploaded images
         images, labels = [], []
         for class_idx, class_name in enumerate(CLASS_NAMES):
             class_folder = os.path.join(UPLOAD_DIR, class_name)
@@ -174,27 +203,24 @@ async def retrain_model():
                         img_array = preprocess_image(f.read())
                     images.append(img_array)
                     labels.append(class_idx)
-                except:
-                    continue # Skip unreadable files safely
+                except Exception:
+                    continue
 
         if len(images) < 2:
-            raise HTTPException(status_code=400, detail="Insufficient file counts inside data paths to compile training boundaries.")
+            TASKS[task_id].update({"status": "error", "message": "Insufficient training samples."})
+            return
 
         X_train = np.array(images)
         y_train = np.array(labels)
 
-        # 3. Rubric Step: Incrementally retrain the model (Fine-tuning phase)
-        # Using a very low learning rate optimizer to safely update pre-trained layers
         local_model.compile(
             optimizer=tf.keras.optimizers.Adam(learning_rate=1e-5),
             loss='sparse_categorical_crossentropy',
             metrics=['accuracy']
         )
-        
-        # Train for a quick epoch to update weights with the new images
+
         local_model.fit(X_train, y_train, epochs=5, batch_size=2, verbose=1)
-        
-        # Save new model with timestamped version instead of blindly overwriting
+
         models_dir = os.path.join(BASE_DIR, "../models")
         os.makedirs(models_dir, exist_ok=True)
         ts = datetime.utcnow().strftime("%Y%m%dT%H%M%SZ")
@@ -202,21 +228,17 @@ async def retrain_model():
         new_model_path = os.path.join(models_dir, new_model_filename)
         local_model.save(new_model_path)
 
-        # Update the runtime reference and model pointer
         model = local_model
-        # Update global MODEL_PATH to point to the new model
-        global MODEL_PATH
         MODEL_PATH = new_model_path
 
-        # Record model version in DB
         try:
             db.record_model_version(model_path=new_model_path, samples=len(images))
         except Exception:
             pass
 
-        return {"status": "success", "message": f"Retrained and saved new model: {new_model_filename} over {len(images)} samples.", "model": new_model_filename}
+        TASKS[task_id].update({"status": "completed", "finished_at": datetime.utcnow().isoformat(), "model": new_model_filename, "samples": len(images)})
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Pipeline execution crash: {str(e)}")
+        TASKS[task_id].update({"status": "error", "message": str(e)})
 
 
 @app.get("/models")
@@ -227,3 +249,11 @@ def list_model_versions():
         return {"models": models}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/retrain/status/{task_id}")
+def retrain_status(task_id: str):
+    task = TASKS.get(task_id)
+    if not task:
+        raise HTTPException(status_code=404, detail="Task not found")
+    return task

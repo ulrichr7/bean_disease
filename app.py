@@ -1,12 +1,16 @@
+import os
 import streamlit as st
 import requests
 from PIL import Image
 import io
 import time
 
-st.secrets["API_URL"]
-
 st.set_page_config(page_title="Production ML Pipeline Dashboard", layout="wide")
+
+try:
+    API_URL = st.secrets["API_URL"]
+except Exception:
+    API_URL = os.getenv("API_URL", "https://bean-disease.onrender.com")
 
 if "start_time" not in st.session_state:
     st.session_state["start_time"] = time.time()

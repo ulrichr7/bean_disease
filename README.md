@@ -50,10 +50,7 @@ bean-disease-ml-pipeline/
 - Run the API and dashboard locally or with Docker
 - Simulate traffic using Locust for performance testing
 
-## Demo Video
-Add your YouTube video link here:
 
-- Demo Video: https://your-demo-video-link
 
 ## Deployment URL
 If deployed to a cloud platform, add the live URL here:
